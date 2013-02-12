@@ -31,25 +31,25 @@ level = [ "#########################"
 
 -- lenses
 setCoord :: Coord -> World -> World
-setCoord coord wrld = World coord (getLevel wrld)
+setCoord coord wrld = wrld { getCoord = coord }
 
 coordL :: Lens World Coord
 coordL = lens getCoord setCoord
 
 setLevel :: Level -> World -> World
-setLevel lvl wrld = World (getCoord wrld) lvl
+setLevel lvl wrld = wrld { getLevel = lvl }
 
 levelL :: Lens World Level
 levelL = lens getLevel setLevel
 
 setRows :: [String] -> Level -> Level
-setRows rows lvl = Level rows (getVisible lvl)
+setRows rows lvl = lvl { getRows = rows }
 
 rowsL :: Lens Level [String]
 rowsL = lens getRows setRows
 
 setVisible :: [[Bool]] -> Level -> Level
-setVisible vis lvl = Level (getRows lvl) vis
+setVisible vis lvl = lvl { getVisible = vis }
 
 visibleL :: Lens Level [[Bool]]
 visibleL = lens getVisible setVisible
