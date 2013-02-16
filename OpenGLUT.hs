@@ -1,7 +1,7 @@
-module OpenGLUT (
-    main,
-    drawWorld
-    ) where
+module OpenGLUT where --(
+    --main,
+    --drawWorld
+    --) where
 
 import Control.Monad (when)
 import Data.IORef
@@ -18,7 +18,7 @@ drawWorld = do
             (programName, _) <- getArgsAndInitialize
             initialDisplayMode $= [DoubleBuffered]
             createWindow "Maze"
-            angle <- newIORef (0.0::GLfloat, 0.0, 0.0)
+            angle <- newIORef (0.0::GLfloat, 0.0::GLfloat, 0.0::GLfloat)
             position <- newIORef (0.0::GLfloat, 0.0)
             showAxis <- newIORef False
             keyboardMouseCallback $= Just (keyboardMouse angle position showAxis)
@@ -29,7 +29,8 @@ drawWorld = do
 display angle position showAxis = do
               clear [ColorBuffer]
               (ax, ay, az) <- get angle
-              rotate 10 $ Vector3 ax ay az
+              when (any (/= (0.0::GLfloat)) [ax, ay, az]) $
+                rotate 10 $ Vector3 ax ay az
               preservingMatrix $ do
                 wall (0.1::GLfloat)
                 translate $ Vector3 (0.2::GLfloat) 0.0 0.0
@@ -42,25 +43,25 @@ display angle position showAxis = do
 keyboardAct a p s (Char ' ') Down = do
   s' <- get s
   s $= not s'
-  a $= (0, 0, 0)
+  a $= (0.0, 0.0, 0.0)
+  postRedisplay Nothing
+keyboardAct a p s (Char '-') Down = do
+  a $= (0.0, 0.0,-1.0)
   postRedisplay Nothing
 keyboardAct a p s (Char '=') Down = do
   a $= (0.0, 0.0, 1.0)
   postRedisplay Nothing
-keyboardAct a p s (Char '-') Down = do
-  a $= (0.0, 0.0, -1.0)
-  postRedisplay Nothing
 keyboardAct a p s (SpecialKey KeyLeft) Down = do
-  a $= (-1.0, 0.0, 0.0)
+  a $= (0.0, -1.0, 0.0)
   postRedisplay Nothing
 keyboardAct a p s (SpecialKey KeyRight) Down = do
-  a $= (1.0, 0.0, 0.0)
-  postRedisplay Nothing
-keyboardAct a p s (SpecialKey KeyUp) Down = do
   a $= (0.0, 1.0, 0.0)
   postRedisplay Nothing
 keyboardAct a p s (SpecialKey KeyDown) Down = do
-  a $= (0.0, -1.0, 0.0)
+  a $= (1.0, 0.0, 0.0)
+  postRedisplay Nothing
+keyboardAct a p s (SpecialKey KeyUp) Down = do
+  a $= (-1.0, 0.0, 0.0)
   postRedisplay Nothing
 keyboardAct _ _ _ _ _ = return ()
 
@@ -72,6 +73,11 @@ uncurry3 f (a, b, c) = ((f a $ b) $ c)
 
 vertify3 :: [(GLfloat, GLfloat, GLfloat)] -> IO ()
 vertify3 = sequence_ . (map $ vertex . uncurry3 Vertex3)
+
+square :: GLfloat -> IO ()
+square w = vertify3
+             [ ( w, 0, w), ( w, 0,-w),
+               (-w, 0,-w), (-w, 0, w) ]
 
 squareX :: GLfloat -> GLfloat -> IO ()
 squareX x w = vertify3
