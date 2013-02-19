@@ -60,12 +60,12 @@ setCursorPosition x y = do
 
 cursorForward :: Int -> CoordState ()
 cursorForward n = do
-                  lift . translate $ Vector3 (blockSize * (realToFrac n)) 0.0 0.0
+                  lift . translate $ Vector3 (blockSize * (realToFrac (2*n))) 0.0 0.0
                   S.modify $ (fstLens ^%= (+n))
 
 cursorDownLine :: Int -> CoordState ()
 cursorDownLine n = do
-                   lift . translate $ Vector3 0.0 0.0 (blockSize * (realToFrac n))
+                   lift . translate $ Vector3 0.0 0.0 (blockSize * (realToFrac (2*n)))
                    S.modify $ (sndLens ^%= (+n))
 
 setCursorColumn :: Int -> CoordState ()
