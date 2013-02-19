@@ -25,11 +25,11 @@ drawWorld = do
             displayCallback $= display angle position showAxis
             mainLoop
 
---display :: IORef GLfloat -> IORef GLfloat -> IORef Bool -> IO ()
+display :: IORef (GLfloat, GLfloat, GLfloat) -> IORef (GLfloat, GLfloat) -> IORef Bool -> IO ()
 display angle position showAxis = do
               clear [ColorBuffer]
               (ax, ay, az) <- get angle
-              when (any (/= (0.0::GLfloat)) [ax, ay, az]) $
+              when (not $ emptyVector ax ay az) $
                 rotate 10 $ Vector3 ax ay az
               preservingMatrix $ do
                 wall (0.1::GLfloat)
@@ -74,57 +74,60 @@ uncurry3 f (a, b, c) = ((f a $ b) $ c)
 vertify3 :: [(GLfloat, GLfloat, GLfloat)] -> IO ()
 vertify3 = sequence_ . (map $ vertex . uncurry3 Vertex3)
 
-square :: GLfloat -> IO ()
-square w = vertify3
+emptyVector :: GLfloat -> GLfloat -> GLfloat -> Bool
+emptyVector x y z = all (== 0.0) [x, y, z]
+
+square :: PrimitiveMode -> GLfloat -> IO ()
+square mode w = renderPrimitive mode $ vertify3
              [ ( w, 0, w), ( w, 0,-w),
                (-w, 0,-w), (-w, 0, w) ]
 
-squareX :: GLfloat -> GLfloat -> IO ()
-squareX x w = vertify3
-                [ ( x, w, w), ( x, w,-w), 
-                  ( x,-w,-w), ( x,-w, w) ]
+squareX :: PrimitiveMode -> GLfloat -> GLfloat -> IO ()
+squareX mode x w = preservingMatrix $ do
+                     rotate 90 $ Vector3 (0.0::GLfloat) 0.0 1.0
+                     translate $ Vector3 0.0 x 0.0
+                     square mode w
 
-squareY :: GLfloat -> GLfloat -> IO ()
-squareY y w = vertify3
-                [ ( w, y, w), ( w, y,-w), 
-                  (-w, y,-w), (-w, y, w) ]
+squareY :: PrimitiveMode -> GLfloat -> GLfloat -> IO ()
+squareY mode y w = preservingMatrix $ do
+                     translate $ Vector3 0.0 y 0.0
+                     square mode w
 
-squareZ :: GLfloat -> GLfloat -> IO ()
-squareZ z w = vertify3
-                [ ( w, w, z), ( w,-w, z), 
-                  (-w,-w, z), (-w, w, z) ]
+squareZ :: PrimitiveMode -> GLfloat -> GLfloat -> IO ()
+squareZ mode z w = preservingMatrix $ do
+                     rotate 90 $ Vector3 (1.0::GLfloat) 0.0 0.0
+                     translate $ Vector3 0.0 z 0.0
+                     square mode w
 
 wall :: GLfloat -> IO ()
 wall w = do 
-         renderPrimitive Quads $ do
-           color $ Color3 (0.721568::GLfloat) 0.541176 0.0
-           squareX w w
-           squareX (-w) w
-           squareY w w
-           squareY (-w) w
-           squareZ w w
-           squareZ (-w) w
-           return ()
+         color $ Color3 (0.721568::GLfloat) 0.541176 0.0
+         squareX Quads w w
+         squareX Quads (-w) w
+         squareY Quads w w
+         squareY Quads (-w) w
+         squareZ Quads w w
+         squareZ Quads (-w) w
          color $ Color3 (1.0::GLfloat) 1.0 1.0
-         sequence_ $ map (renderPrimitive LineLoop) 
-           [ squareX w w
-           , squareX (-w) w
-           , squareY w w
-           , squareY (-w) w
-           , squareZ w w
-           , squareZ (-w) w ]
+         sequence_ $ 
+           [ squareX LineLoop w w
+           , squareX LineLoop (-w) w
+           , squareY LineLoop w w
+           , squareY LineLoop (-w) w
+           , squareZ LineLoop w w
+           , squareZ LineLoop (-w) w ]
 
 goal :: GLfloat -> IO ()
 goal w = do
          color $ Color3 (1.0::GLfloat) 1.0 0.0
-         renderPrimitive Quads $ squareY (-w) w
+         squareY Quads (-w) w
          renderPrimitive Triangles $ vertify3
            [ ( 0, w, 0), ( w,-w, w), ( w,-w,-w)
            , ( 0, w, 0), ( w,-w,-w), (-w,-w,-w)
            , ( 0, w, 0), (-w,-w,-w), (-w,-w, w)
            , ( 0, w, 0), (-w,-w, w), ( w,-w, w) ]
          color $ Color3 (1.0::GLfloat) 1.0 1.0
-         renderPrimitive LineLoop $ squareY (-w) w
+         squareY LineLoop (-w) w
          sequence_ $ map (renderPrimitive LineLoop . vertify3)
            [ [ ( 0, w, 0), ( w,-w, w), ( w,-w,-w) ]
            , [ ( 0, w, 0), ( w,-w,-w), (-w,-w,-w) ]
