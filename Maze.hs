@@ -118,11 +118,11 @@ handleViewCommands _ angle _ =
 
 display :: IORef (GLfloat, GLfloat, GLfloat) -> IORef Bool -> 
            IORef Command -> IORef World -> IO ()
-display angle showAxis command world = do
+display angle showAxes command world = do
            clear [ColorBuffer]
            wrld <- get world
            cmd <- get command
-           handleViewCommands cmd angle showAxis
+           handleViewCommands cmd angle showAxes
            (ax, ay, az) <- get angle
            when (not $ emptyVector ax ay az) $
              rotate 10 $ Vector3 ax ay az
@@ -132,7 +132,7 @@ display angle showAxis command world = do
              lift (world $= newWrld)
            wrld <- get world
            gameEffect wrld
-           drawAxis showAxis
+           drawAxes showAxes
            swapBuffers 
 
 initWorld :: World
@@ -145,9 +145,9 @@ main = do
        initialDisplayMode $= [DoubleBuffered]
        createWindow "Maze"
        angle <- newIORef (0.0::GLfloat, 0.0::GLfloat, 0.0::GLfloat)
-       showAxis <- newIORef False
+       showAxes <- newIORef False
        world <- newIORef initWorld
-       command <- newIORef ToggleAxes
+       command <- newIORef NoOp
        keyboardMouseCallback $= Just (keyboardMouse command)
-       displayCallback $= display angle showAxis command world
+       displayCallback $= display angle showAxes command world
        mainLoop

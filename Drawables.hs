@@ -106,9 +106,9 @@ goal w = do
            , [ ( 0, w, 0), (-w,-w,-w), (-w,-w, w) ]
            , [ ( 0, w, 0), (-w,-w, w), ( w,-w, w) ] ]
 
-drawAxis :: IORef Bool -> IO ()
-drawAxis showAxis = do 
-           s <- get showAxis
+drawAxes :: IORef Bool -> IO ()
+drawAxes showAxes = do 
+           s <- get showAxes
            when s $ renderPrimitive Lines $ do
              color $ Color3 (1.0::GLfloat) 0.0 0.0
              vertify3 
