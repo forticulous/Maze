@@ -1,11 +1,16 @@
 module Maze where
 
-import Control.Monad (unless)
+import Control.Monad (when, unless)
 import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.State
+import Data.IORef
+import qualified Control.Monad.Trans.State as S
+import Graphics.UI.GLUT
+import Graphics.Rendering.OpenGL
 import Data.Lens.Common
 
-import Console
+import World
+import Drawables
+import Keyboard
 import Types
 
 getAtCoord :: Coord -> [String] -> Char
@@ -37,8 +42,8 @@ readCmd "w" = GoUp
 readCmd "s" = GoDown
 readCmd "d" = GoRight
 readCmd "a" = GoLeft
-readCmd "q" = Exit
-readCmd _   = Exit
+readCmd "q" = Quit
+readCmd _   = Quit
 
 getCmd :: IO Command
 getCmd = getLine >>= return . readCmd
@@ -73,11 +78,11 @@ fogOfWar wrld = let coord = wrld ^. coordL
 
 updateOneTurn :: Command -> GameState ()
 updateOneTurn cmd = do 
-                    modify $ updateWorld cmd
-                    modify $ fogOfWar 
+                    S.modify $ updateWorld cmd
+                    S.modify $ fogOfWar 
 
 gameEffect :: World -> IO ()
-gameEffect wrld = drawWorld wrld 
+gameEffect wrld = preservingMatrix $ drawWorld wrld 
 
 checkWin :: World -> IO Bool
 checkWin wrld = let coord = wrld ^. coordL
@@ -87,19 +92,71 @@ checkWin wrld = let coord = wrld ^. coordL
                    then putStrLn "You win!" >> return True
                    else return False
 
-gameLoop :: GameState () 
-gameLoop = do
-           wrld <- get
-           lift $ gameEffect wrld
-           cmd <- lift getCmd
-           updateOneTurn cmd
-           wrld <- get
-           win <- lift $ checkWin wrld
-           unless (cmd == Exit || win) gameLoop
+
+emptyVector :: GLfloat -> GLfloat -> GLfloat -> Bool
+emptyVector x y z = all (== 0.0) [x, y, z]
+
+handleViewCommands :: Command -> IORef (GLfloat, GLfloat, GLfloat) -> 
+                      IORef Bool -> IO ()
+handleViewCommands ToggleAxes _ showAxes = 
+    showAxes $~ not
+handleViewCommands ZViewDown angle _ = 
+    angle $= (0.0,0.0,-1.0)
+handleViewCommands ZViewUp angle _ = 
+    angle $= (0.0,0.0,1.0)
+handleViewCommands YViewDown angle _ = 
+    angle $= (1.0,0.0,0.0)
+handleViewCommands YViewUp angle _ = 
+    angle $= (-1.0,0.0,0.0)
+handleViewCommands XViewDown angle _ = 
+    angle $= (0.0,-1.0,0.0)
+handleViewCommands XViewUp angle _ = 
+    angle $= (0.0,1.0,0.0)
+handleViewCommands _ angle _ =
+    angle $= (0.0,0.0,0.0)
+
+--gameLoop :: GameState () 
+--gameLoop = do
+--           wrld <- get
+--           lift $ gameEffect wrld
+--           cmd <- lift getCmd
+--           updateOneTurn cmd
+--           wrld <- get
+--           win <- lift $ checkWin wrld
+--           unless (cmd == Exit || win) gameLoop
+
+display :: IORef (GLfloat, GLfloat, GLfloat) -> IORef (GLfloat, GLfloat) ->
+           IORef Bool -> IORef Command -> IORef World -> IO ()
+display angle position showAxis command world = do
+           clear [ColorBuffer]
+           wrld <- get world
+           cmd <- get command
+           handleViewCommands cmd angle showAxis
+           (ax, ay, az) <- get angle
+           when (not $ emptyVector ax ay az) $
+             rotate 10 $ Vector3 ax ay az
+           (flip S.evalStateT) wrld $ do
+             updateOneTurn cmd
+             newWrld <- S.get
+             lift (world $= newWrld)
+           gameEffect wrld
+           drawAxis showAxis
+           swapBuffers 
 
 initWorld :: World
 initWorld = let allFalse = (map . map) $ \_ -> False
             in fogOfWar $ World (1,1) (Level level (allFalse level))
 
 main :: IO ()
-main = evalStateT gameLoop initWorld
+main = do
+       (programName, _) <- getArgsAndInitialize
+       initialDisplayMode $= [DoubleBuffered]
+       createWindow "Maze"
+       angle <- newIORef (0.0::GLfloat, 0.0::GLfloat, 0.0::GLfloat)
+       position <- newIORef (0.0::GLfloat, 0.0)
+       showAxis <- newIORef False
+       world <- newIORef initWorld
+       command <- newIORef ToggleAxes
+       keyboardMouseCallback $= Just (keyboardMouse command)
+       displayCallback $= display angle position showAxis command world
+       mainLoop

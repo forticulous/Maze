@@ -4,7 +4,10 @@ import Control.Monad.Trans.State
 import Data.Lens.Common
 import qualified Control.Category as Cat
 
-data Command = GoUp | GoDown | GoRight | GoLeft | Exit deriving (Eq)
+data Command = GoUp | GoDown | GoRight | GoLeft | Quit | 
+               ToggleAxes | ZViewDown | ZViewUp |
+               YViewDown | YViewUp | XViewDown |
+               XViewUp deriving (Eq)
 
 type Coord = (Int, Int)
 type GameState a = StateT World IO a
