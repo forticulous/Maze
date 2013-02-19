@@ -37,17 +37,6 @@ canMove :: Char -> Bool
 canMove '#' = False
 canMove _   = True
 
-readCmd :: String -> Command
-readCmd "w" = GoUp
-readCmd "s" = GoDown
-readCmd "d" = GoRight
-readCmd "a" = GoLeft
-readCmd "q" = Quit
-readCmd _   = Quit
-
-getCmd :: IO Command
-getCmd = getLine >>= return . readCmd
-
 move :: Command -> Coord -> Coord
 move GoUp    = \(x, y) -> (x, y - 1)
 move GoDown  = \(x, y) -> (x, y + 1)
@@ -82,7 +71,9 @@ updateOneTurn cmd = do
                     S.modify $ fogOfWar 
 
 gameEffect :: World -> IO ()
-gameEffect wrld = preservingMatrix $ drawWorld wrld 
+gameEffect wrld = do 
+                  preservingMatrix $ drawWorld wrld
+                  drawPlayer $ wrld ^. coordL
 
 checkWin :: World -> IO Bool
 checkWin wrld = let coord = wrld ^. coordL
@@ -125,9 +116,9 @@ handleViewCommands _ angle _ =
 --           win <- lift $ checkWin wrld
 --           unless (cmd == Exit || win) gameLoop
 
-display :: IORef (GLfloat, GLfloat, GLfloat) -> IORef (GLfloat, GLfloat) ->
-           IORef Bool -> IORef Command -> IORef World -> IO ()
-display angle position showAxis command world = do
+display :: IORef (GLfloat, GLfloat, GLfloat) -> IORef Bool -> 
+           IORef Command -> IORef World -> IO ()
+display angle showAxis command world = do
            clear [ColorBuffer]
            wrld <- get world
            cmd <- get command
@@ -139,6 +130,7 @@ display angle position showAxis command world = do
              updateOneTurn cmd
              newWrld <- S.get
              lift (world $= newWrld)
+           wrld <- get world
            gameEffect wrld
            drawAxis showAxis
            swapBuffers 
@@ -153,10 +145,9 @@ main = do
        initialDisplayMode $= [DoubleBuffered]
        createWindow "Maze"
        angle <- newIORef (0.0::GLfloat, 0.0::GLfloat, 0.0::GLfloat)
-       position <- newIORef (0.0::GLfloat, 0.0)
        showAxis <- newIORef False
        world <- newIORef initWorld
        command <- newIORef ToggleAxes
        keyboardMouseCallback $= Just (keyboardMouse command)
-       displayCallback $= display angle position showAxis command world
+       displayCallback $= display angle showAxis command world
        mainLoop

@@ -20,9 +20,8 @@ drawFromChar '*' = goal blockSize
 drawFromChar _   = return ()
 
 canSee :: Char -> Bool -> Bool
---canSee ' ' _ = False
---canSee _ vis = vis
-canSee _ _ = True
+canSee ' ' _ = False
+canSee _ vis = vis
 
 drawSquare :: (Char, Bool) -> CoordState ()
 drawSquare (chr, vis) = do 
@@ -46,31 +45,28 @@ drawLevel :: Level -> CoordState ()
 drawLevel lvl = mapM_ drawRow $ zipLevel lvl
 
 drawWorld :: World -> IO ()
-drawWorld wrld = (flip S.evalStateT) (0,0) $ do
+drawWorld wrld = (flip S.evalStateT) (wrld ^. coordL) $ do
                    setCursorPosition 0 0
                    drawLevel $ wrld ^. levelL
-                   drawPlayer $ wrld ^. coordL
 
-drawPlayer :: Coord -> CoordState ()
-drawPlayer coord = do
-                   uncurry (flip setCursorPosition) coord
-                   lift $ player blockSize
+drawPlayer :: Coord -> IO ()
+drawPlayer coord = player blockSize
 
 setCursorPosition :: Int -> Int -> CoordState ()
 setCursorPosition x y = do
                         (_, oldY) <- S.get 
                         cursorDownLine (y - oldY)
-                        setCursorColumn y
+                        setCursorColumn x
 
 cursorForward :: Int -> CoordState ()
 cursorForward n = do
                   lift . translate $ Vector3 (blockSize * (realToFrac n)) 0.0 0.0
-                  S.modify $ (\coord -> fstLens ^%= (+n) $ coord)
+                  S.modify $ (fstLens ^%= (+n))
 
 cursorDownLine :: Int -> CoordState ()
 cursorDownLine n = do
                    lift . translate $ Vector3 0.0 0.0 (blockSize * (realToFrac n))
-                   S.modify $ (\coord -> sndLens ^%= (+n) $ coord)
+                   S.modify $ (sndLens ^%= (+n))
 
 setCursorColumn :: Int -> CoordState ()
 setCursorColumn newX = do 
