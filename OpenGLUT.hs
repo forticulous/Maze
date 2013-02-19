@@ -32,11 +32,13 @@ display angle position showAxis = do
               when (not $ emptyVector ax ay az) $
                 rotate 10 $ Vector3 ax ay az
               preservingMatrix $ do
-                wall (0.1::GLfloat)
+                brownWall (0.1::GLfloat)
                 translate $ Vector3 (0.2::GLfloat) 0.0 0.0
-                wall (0.1::GLfloat)
+                brownWall (0.1::GLfloat)
                 translate $ Vector3 (0.2::GLfloat) 0.0 0.0
                 goal (0.1::GLfloat)
+                translate $ Vector3 (0.2::GLfloat) 0.0 0.0
+                player (0.1::GLfloat)
               drawAxis showAxis
               swapBuffers
 
@@ -99,9 +101,18 @@ squareZ mode z w = preservingMatrix $ do
                      translate $ Vector3 0.0 z 0.0
                      square mode w
 
+brownWall :: GLfloat -> IO ()
+brownWall w = do
+              color $ Color3 (0.721568::GLfloat) 0.541176 0.0
+              wall w 
+
+greenWall :: GLfloat -> IO ()
+greenWall w = do
+              color $ Color3 (0.0::GLfloat) 1.0 0.0
+              wall w
+
 wall :: GLfloat -> IO ()
 wall w = do 
-         color $ Color3 (0.721568::GLfloat) 0.541176 0.0
          squareX Quads w w
          squareX Quads (-w) w
          squareY Quads w w
@@ -116,6 +127,35 @@ wall w = do
            , squareY LineLoop (-w) w
            , squareZ LineLoop w w
            , squareZ LineLoop (-w) w ]
+
+player :: GLfloat -> IO ()
+player w = do
+           preservingMatrix $ do
+             translate $ Vector3 0.0 (2*w/3) 0.0
+             greenWall (w/3)
+           preservingMatrix $ do
+             translate $ Vector3 0.0 (w/9) 0.0
+             greenWall (2*w/9)
+           preservingMatrix $ do
+             translate $ Vector3 0.0 (-w/3) 0.0
+             greenWall (2*w/9)
+           preservingMatrix $ do
+             translate $ Vector3 0.0 (-7*w/9) 0.0
+             rotate 90 $ Vector3 (1.0::GLfloat) 0.0 0.0
+             preservingMatrix $ do
+               translate $ Vector3 0.0 (w/3) 0.0
+               greenWall (2*w/9)
+             preservingMatrix $ do
+               translate $ Vector3 0.0 (-w/3) 0.0
+               greenWall (2*w/9)
+           preservingMatrix $ do
+             rotate 90 $ Vector3 (1.0::GLfloat) 0.0 0.0
+             preservingMatrix $ do
+               translate $ Vector3 0.0 (4*w/9) 0.0
+               greenWall (2*w/9)
+             preservingMatrix $ do
+               translate $ Vector3 0.0 (-4*w/9) 0.0
+               greenWall (2*w/9)
 
 goal :: GLfloat -> IO ()
 goal w = do
