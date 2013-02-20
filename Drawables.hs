@@ -62,15 +62,14 @@ wall w = do
 
 player :: GLfloat -> IO ()
 player w = do
-           -- legs
+           -- left leg
            preservingMatrix $ do
-             translate $ Vector3 0.0 (-7*w/9) 0.0
-             preservingMatrix $ do
-               translate $ Vector3 0.0 0.0 (-w/3)
-               greenWall (2*w/9)
-             preservingMatrix $ do
-               translate $ Vector3 0.0 0.0 (w/3)
-               greenWall (2*w/9)
+             translate $ Vector3 0.0 (-7*w/9) (-w/3)
+             greenWall (2*w/9)
+           -- right leg
+           preservingMatrix $ do
+             translate $ Vector3 0.0 (-7*w/9) (w/3)
+             greenWall (2*w/9)
            -- left arm
            preservingMatrix $ do
              translate $ Vector3 0.0 0.0 (-4*w/9)
