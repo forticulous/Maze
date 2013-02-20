@@ -96,7 +96,7 @@ handleViewCommands ZViewDown angle _ =
 handleViewCommands ZViewUp angle _ = 
     angle $= (0.0,0.0,1.0)
 handleViewCommands YViewDown angle _ = 
-    angle $= (1.0,0.0,0.0)
+    angle $= (5.0,0.0,0.0)
 handleViewCommands YViewUp angle _ = 
     angle $= (-1.0,0.0,0.0)
 handleViewCommands XViewDown angle _ = 
@@ -148,6 +148,10 @@ main = do
        showAxes <- newIORef False
        world <- newIORef initWorld
        command <- newIORef NoOp
+       -- initial rotation
+       rotate 10 $ Vector3 (0.0::GLfloat) 0.0 1.0
+       rotate 50 $ Vector3 (1.0::GLfloat) 0.0 0.0
+       rotate 50 $ Vector3 (0.0::GLfloat) (-1.0) 0.0
        keyboardMouseCallback $= Just (keyboardMouse command)
        displayCallback $= display angle showAxes command world
        mainLoop

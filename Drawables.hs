@@ -53,41 +53,44 @@ wall w = do
          squareZ Quads (-w) w
          color $ Color3 (1.0::GLfloat) 1.0 1.0
          sequence_ $ 
-           [ squareX LineLoop w w
-           , squareX LineLoop (-w) w
+           [ squareX LineLoop (-w) w
+           --, squareX LineLoop w w
+           --, squareY LineLoop (-w) w
            , squareY LineLoop w w
-           , squareY LineLoop (-w) w
-           , squareZ LineLoop w w
-           , squareZ LineLoop (-w) w ]
+           --, squareZ LineLoop (-w) w
+           , squareZ LineLoop w w ]
 
 player :: GLfloat -> IO ()
 player w = do
+           -- legs
            preservingMatrix $ do
-             translate $ Vector3 0.0 (2*w/3) 0.0
-             greenWall (w/3)
+             translate $ Vector3 0.0 (-7*w/9) 0.0
+             preservingMatrix $ do
+               translate $ Vector3 0.0 0.0 (-w/3)
+               greenWall (2*w/9)
+             preservingMatrix $ do
+               translate $ Vector3 0.0 0.0 (w/3)
+               greenWall (2*w/9)
+           -- left arm
            preservingMatrix $ do
-             translate $ Vector3 0.0 (w/9) 0.0
+             translate $ Vector3 0.0 0.0 (-4*w/9)
              greenWall (2*w/9)
+           -- bottom abdomen
            preservingMatrix $ do
              translate $ Vector3 0.0 (-w/3) 0.0
              greenWall (2*w/9)
+           -- upper abdomen
            preservingMatrix $ do
-             translate $ Vector3 0.0 (-7*w/9) 0.0
-             rotate 90 $ Vector3 (1.0::GLfloat) 0.0 0.0
-             preservingMatrix $ do
-               translate $ Vector3 0.0 (w/3) 0.0
-               greenWall (2*w/9)
-             preservingMatrix $ do
-               translate $ Vector3 0.0 (-w/3) 0.0
-               greenWall (2*w/9)
+             translate $ Vector3 0.0 (w/9) 0.0
+             greenWall (2*w/9)
+           -- right arm
            preservingMatrix $ do
-             rotate 90 $ Vector3 (1.0::GLfloat) 0.0 0.0
-             preservingMatrix $ do
-               translate $ Vector3 0.0 (4*w/9) 0.0
-               greenWall (2*w/9)
-             preservingMatrix $ do
-               translate $ Vector3 0.0 (-4*w/9) 0.0
-               greenWall (2*w/9)
+             translate $ Vector3 0.0 0.0 (4*w/9)
+             greenWall (2*w/9)
+           -- head
+           preservingMatrix $ do
+             translate $ Vector3 0.0 (2*w/3) 0.0
+             greenWall (w/3)
 
 goal :: GLfloat -> IO ()
 goal w = do
