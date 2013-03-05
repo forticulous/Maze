@@ -6,7 +6,7 @@ import Graphics.Rendering.OpenGL
 import Graphics.UI.GLUT
 
 uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
-uncurry3 f (a, b, c) = ((f a $ b) $ c)
+uncurry3 f (a, b, c) = f a b c
 
 vertify3 :: [(GLfloat, GLfloat, GLfloat)] -> IO ()
 vertify3 = sequence_ . (map $ vertex . uncurry3 Vertex3)
