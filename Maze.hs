@@ -86,6 +86,28 @@ checkWin wrld = let coord = wrld ^. coordL
 emptyVector :: GLfloat -> GLfloat -> GLfloat -> Bool
 emptyVector x y z = all (== 0.0) [x, y, z]
 
+<<<<<<< HEAD
+=======
+handleViewCommands :: Command -> IORef (GLfloat, GLfloat, GLfloat) -> 
+                      IORef Bool -> IO ()
+handleViewCommands ToggleAxes _ showAxes = 
+    showAxes $~ not
+handleViewCommands ZViewDown angle _ = 
+    angle $= (0.0,0.0,-1.0)
+handleViewCommands ZViewUp angle _ = 
+    angle $= (0.0,0.0,1.0)
+handleViewCommands YViewDown angle _ = 
+    angle $= (5.0,0.0,0.0)
+handleViewCommands YViewUp angle _ = 
+    angle $= (-1.0,0.0,0.0)
+handleViewCommands XViewDown angle _ = 
+    angle $= (0.0,-1.0,0.0)
+handleViewCommands XViewUp angle _ = 
+    angle $= (0.0,1.0,0.0)
+handleViewCommands _ angle _ =
+    angle $= (0.0,0.0,0.0)
+
+>>>>>>> fca8de13aa41d39db8a8c5fb1f853ca469c5bc0d
 --gameLoop :: GameState () 
 --gameLoop = do
 --           wrld <- get
@@ -130,8 +152,14 @@ main = do
        world <- newIORef initWorld
        command <- newIORef NoOp
        -- initial rotation
+<<<<<<< HEAD
        rotate 50 $ Vector3 (-1.0::GLfloat) 0.0 0.0
        rotate 50 $ Vector3 (0.0::GLfloat) 1.0 0.0
+=======
+       rotate 10 $ Vector3 (0.0::GLfloat) 0.0 1.0
+       rotate 50 $ Vector3 (1.0::GLfloat) 0.0 0.0
+       rotate 50 $ Vector3 (0.0::GLfloat) (-1.0) 0.0
+>>>>>>> fca8de13aa41d39db8a8c5fb1f853ca469c5bc0d
        keyboardMouseCallback $= Just (keyboardMouse command)
        displayCallback $= display angle showAxes command world
        mainLoop
