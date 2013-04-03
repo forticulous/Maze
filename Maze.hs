@@ -83,28 +83,8 @@ checkWin wrld = let coord = wrld ^. coordL
                    then putStrLn "You win!" >> return True
                    else return False
 
-
 emptyVector :: GLfloat -> GLfloat -> GLfloat -> Bool
 emptyVector x y z = all (== 0.0) [x, y, z]
-
-handleViewCommands :: Command -> IORef (GLfloat, GLfloat, GLfloat) -> 
-                      IORef Bool -> IO ()
-handleViewCommands ToggleAxes _ showAxes = 
-    showAxes $~ not
-handleViewCommands ZViewDown angle _ = 
-    angle $= (0.0,0.0,-1.0)
-handleViewCommands ZViewUp angle _ = 
-    angle $= (0.0,0.0,1.0)
-handleViewCommands YViewDown angle _ = 
-    angle $= (1.0,0.0,0.0)
-handleViewCommands YViewUp angle _ = 
-    angle $= (-1.0,0.0,0.0)
-handleViewCommands XViewDown angle _ = 
-    angle $= (0.0,-1.0,0.0)
-handleViewCommands XViewUp angle _ = 
-    angle $= (0.0,1.0,0.0)
-handleViewCommands _ angle _ =
-    angle $= (0.0,0.0,0.0)
 
 --gameLoop :: GameState () 
 --gameLoop = do
@@ -119,7 +99,7 @@ handleViewCommands _ angle _ =
 display :: IORef (GLfloat, GLfloat, GLfloat) -> IORef Bool -> 
            IORef Command -> IORef World -> IO ()
 display angle showAxes command world = do
-           clear [ColorBuffer]
+           clear [ColorBuffer,DepthBuffer]
            wrld <- get world
            cmd <- get command
            handleViewCommands cmd angle showAxes
@@ -142,12 +122,16 @@ initWorld = let allFalse = (map . map) $ \_ -> False
 main :: IO ()
 main = do
        (programName, _) <- getArgsAndInitialize
-       initialDisplayMode $= [DoubleBuffered]
+       initialDisplayMode $= [WithDepthBuffer,DoubleBuffered]
        createWindow "Maze"
+       depthFunc $= Just Less
        angle <- newIORef (0.0::GLfloat, 0.0::GLfloat, 0.0::GLfloat)
        showAxes <- newIORef False
        world <- newIORef initWorld
        command <- newIORef NoOp
+       -- initial rotation
+       rotate 50 $ Vector3 (-1.0::GLfloat) 0.0 0.0
+       rotate 50 $ Vector3 (0.0::GLfloat) 1.0 0.0
        keyboardMouseCallback $= Just (keyboardMouse command)
        displayCallback $= display angle showAxes command world
        mainLoop
